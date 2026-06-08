@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: int_business_sentiment
+    description: >
+      Business-level aggregation of VADER sentiment scores derived from
+      review_sentiment (populated by ingestion/run_vader.py).
+      Grain: one row per business_id.
+    columns:
+      - name: business_id
+        description: Yelp unique identifier for the business.
+        tests:
+          - unique
+          - not_null
+
+      - name: scored_review_count
+        description: Number of reviews that were scored by VADER for this business.
+
+      - name: avg_sentiment
+        description: >
+          Mean VADER compound score across all reviews for the business.
+          Range [-1.0, 1.0]. Higher values indicate more positive language overall.
+
+      - name: pct_positive
+        description: Percentage of reviews with compound score above 0.05 (VADER positive threshold).
+
+      - name: pct_negative
+        description: Percentage of reviews with compound score below -0.05 (VADER negative threshold).
+
+      - name: pct_neutral
+        description: Percentage of reviews with compound score between -0.05 and 0.05.

@@ -1,0 +1,159 @@
+version: 2
+
+models:
+  - name: stg_business
+    description: >
+      Cleaned and filtered subset of the Yelp business dataset.
+      Scoped to restaurants only (categories containing 'Restaurants').
+      Flattens the attributes STRUCT into individual columns.
+    columns:
+      - name: business_id
+        description: Yelp's unique identifier for the business.
+        tests:
+          - unique
+          - not_null
+
+      - name: name
+        description: Business name as listed on Yelp.
+        tests:
+          - not_null
+
+      - name: city
+        description: City where the business is located.
+
+      - name: state
+        description: US state abbreviation.
+
+      - name: latitude
+        description: Geographic latitude.
+
+      - name: longitude
+        description: Geographic longitude.
+
+      - name: avg_stars
+        description: >
+          Yelp's cumulative average star rating for the business.
+          This is a rolling aggregate maintained by Yelp, not recalculated from raw reviews.
+        tests:
+          - not_null
+
+      - name: review_count
+        description: Total number of reviews as reported by Yelp.
+
+      - name: is_open
+        description: Whether the business is currently open (1) or permanently closed (0), cast to boolean.
+        tests:
+          - not_null
+
+      - name: categories
+        description: Comma-separated list of Yelp categories assigned to the business.
+
+      - name: price_range
+        description: >
+          Yelp price range indicator (1–4). Stored as a string in the source;
+          null when the business has not set this attribute.
+
+      - name: outdoor_seating
+        description: Whether the venue offers outdoor seating. Source value is a string ('True'/'False').
+
+      - name: has_delivery
+        description: Whether the restaurant offers delivery.
+
+      - name: has_takeout
+        description: Whether the restaurant offers takeout.
+
+      - name: takes_reservations
+        description: Whether the restaurant accepts reservations.
+
+      - name: wifi
+        description: WiFi availability. Raw value may be 'free', 'paid', 'no', or null.
+
+      - name: alcohol
+        description: Alcohol service type. Values include 'full_bar', 'beer_and_wine', 'none', or null.
+
+      - name: good_for_kids
+        description: Whether the business is considered family-friendly.
+
+      - name: has_tv
+        description: Whether the venue has TVs.
+
+  - name: stg_review
+    description: >
+      Cleaned review records from the Yelp dataset.
+      Excludes reviews with null or empty text since they carry no signal for sentiment analysis.
+      Adds a total_votes column aggregating useful + funny + cool peer endorsements.
+    columns:
+      - name: review_id
+        description: Yelp's unique identifier for the review.
+        tests:
+          - unique
+          - not_null
+
+      - name: user_id
+        description: Yelp user who wrote the review.
+        tests:
+          - not_null
+
+      - name: business_id
+        description: Business the review is for.
+        tests:
+          - not_null
+
+      - name: stars
+        description: Star rating given in this review (1–5).
+        tests:
+          - not_null
+
+      - name: useful
+        description: Number of 'useful' votes this review received from other users.
+
+      - name: funny
+        description: Number of 'funny' votes this review received from other users.
+
+      - name: cool
+        description: Number of 'cool' votes this review received from other users.
+
+      - name: total_votes
+        description: Sum of useful + funny + cool. Used as a proxy for review credibility.
+
+      - name: review_text
+        description: Full text of the review.
+        tests:
+          - not_null
+
+      - name: review_date
+        description: Date the review was posted, cast to date.
+        tests:
+          - not_null
+
+      - name: review_year
+        description: Year extracted from review_date, for time-series aggregations.
+
+  - name: stg_tip
+    description: >
+      Cleaned tip records from the Yelp dataset. Tips are short recommendations
+      without a star rating, distinct from full reviews.
+      Excludes tips with null or empty text.
+    columns:
+      - name: user_id
+        description: Yelp user who wrote the tip.
+        tests:
+          - not_null
+
+      - name: business_id
+        description: Business the tip refers to.
+        tests:
+          - not_null
+
+      - name: tip_text
+        description: Full text of the tip.
+        tests:
+          - not_null
+
+      - name: tip_date
+        description: Date the tip was posted.
+        tests:
+          - not_null
+
+      - name: compliment_count
+        description: Number of compliments (likes) the tip received from other users.

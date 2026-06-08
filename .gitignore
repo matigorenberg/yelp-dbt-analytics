@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Data — too large for git (DuckDB + raw Yelp JSON dataset)
+data/yelp.duckdb
+data/raw/
+
+# dbt artifacts
+yelp_transform/target/
+yelp_transform/dbt_packages/
+yelp_transform/logs/
+
+# Node / dashboard
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.env
+dashboard/.env.local
+
+# Logs
+*.log
