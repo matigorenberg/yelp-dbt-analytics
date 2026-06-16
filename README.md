@@ -6,6 +6,14 @@ An end-to-end analytics engineering project built on the [Yelp Open Dataset](htt
 
 ---
 
+## Live app
+
+![Yelp Hidden Gems app](docs/screenshots/app.gif)
+
+*Landing page showing cuisine-based discovery. Select a cuisine to browse restaurants ranked by hidden gem score, with filters for minimum stars, review count, and price range.*
+
+---
+
 ## What it does
 
 Most restaurant rankings reward volume: the more reviews, the higher the visibility. This project flips that logic by scoring restaurants on how positively people *write* about them relative to how many reviews they have, surfacing places with genuine potential before the crowds arrive.
@@ -25,20 +33,15 @@ The 20-review minimum filters out businesses where friends and family skew the s
 
 ## Pipeline
 
-```
-Yelp Open Dataset (7M reviews across all business categories, 52K restaurants)
-    ↓ ingestion/load_to_duckdb.py
-DuckDB (local warehouse)
-    ↓ ingestion/run_vader.py  (4.7M restaurant reviews scored after filtering by category)
-review_sentiment table
-    ↓ dbt run
-    stg_business / stg_review / stg_tip     (views)
-    int_business_sentiment                  (view, aggregates VADER per business)
-    mart_restaurants / mart_cuisine_summary (tables)
-    ↓ ingestion/export_data.py
-JSON (restaurants.json + hidden_gems.json)
-    ↓ React + Vite + Tailwind (dashboard/)
-Interactive dashboard (deployed on Vercel)
+```mermaid
+flowchart LR
+    A["Yelp Open Dataset<br/>7M reviews · 150K businesses"] -->|load_to_duckdb.py| B[("DuckDB")]
+    B -->|run_vader.py<br/>4.7M reviews| C["review_sentiment<br/>VADER scores"]
+    C -->|dbt run| D["Staging<br/>stg_business · stg_review · stg_tip"]
+    D --> E["Intermediate<br/>int_business_sentiment"]
+    E --> F["Marts<br/>mart_restaurants · mart_cuisine_summary"]
+    F -->|export_data.py| G["restaurants.json<br/>hidden_gems.json"]
+    G -->|React + Vite| H["Dashboard<br/>Vercel"]
 ```
 
 ---
@@ -64,6 +67,25 @@ Interactive dashboard (deployed on Vercel)
 **Pre-computed NLP:** All sentiment scoring runs offline during ingestion. Zero production latency on the dashboard.
 
 **Static JSON export:** No backend or API in production. [dbt](https://docs.getdbt.com/) marts are exported to two JSON files (grouped by cuisine) and served as static assets, keeping the deployment simple and free.
+
+---
+
+## Key findings
+
+| Metric | Value |
+|---|---|
+| Restaurants in pipeline | 52K |
+| Reviews scored with VADER | 4.7M |
+| Restaurants qualifying for a hidden gem score | 34,425 |
+| Top city by gem count | Philadelphia, PA, with 3,936 gems |
+| Top cuisine by sentiment | Vegan/Vegetarian (avg 0.97) |
+| Bottom cuisine by sentiment | Burgers (avg 0.72) |
+
+**Sentiment stabilizes at scale.** Restaurants with fewer than 10 reviews show a sentiment standard deviation of 0.34, nearly 3× higher than the 0.12 seen in restaurants with 200+ reviews. This is the empirical basis for the 20-review minimum: below that threshold, scores are too noisy to be meaningful.
+
+**Top gems cluster at the review floor.** All 10 highest-scoring restaurants sit between 20 and 21 reviews, each carrying over 95% positive sentiment. The top scorer, Café BellaVita in Merchantville, NJ, reaches a 96.2% sentiment score across exactly 20 reviews, a score that would drop significantly after gaining 200 more reviews at the same sentiment level.
+
+**American restaurants dominate by count but not by quality.** With 11,838 restaurants, American cuisine is the largest category in the dataset, yet its average hidden gem score (0.80) ranks near the bottom. Vegan/Vegetarian (687 restaurants) leads by a wide margin, suggesting that specialized cuisines attract more intentional, satisfied diners.
 
 ---
 
