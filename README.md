@@ -41,7 +41,7 @@ flowchart LR
     D --> E["Intermediate<br/>int_business_sentiment"]
     E --> F["Marts<br/>mart_restaurants · mart_cuisine_summary"]
     F -->|export_data.py| G["restaurants.json<br/>hidden_gems.json"]
-    G -->|React + Vite| H["Dashboard<br/>Vercel"]
+    G -->|React + Vite| H["React app<br/>Vercel"]
 ```
 
 ---
